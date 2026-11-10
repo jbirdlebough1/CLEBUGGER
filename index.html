@@ -1,0 +1,1055 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CLEBUGGER - Multi-Project Bug & Regression Tracker</title>
+  <style>
+    :root {
+      --bg-dark: #0d1117;
+      --bg-card: #161b22;
+      --bg-card-header: #1f262d;
+      --border-color: #30363d;
+      --text-main: #f0f6fc;
+      --text-muted: #8b949e;
+      --accent-blue: #58a6ff;
+      --accent-green: #3fb950;
+      --accent-yellow: #d29922;
+      --accent-red: #f85149;
+      --accent-purple: #a371f7;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      padding: 16px;
+      line-height: 1.5;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--border-color);
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .brand-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--accent-blue);
+    }
+    .brand-subtitle {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: normal;
+    }
+
+    .btn {
+      background: #21262d;
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+    }
+    .btn:hover { background: #30363d; border-color: #8b949e; }
+    .btn-primary { background: #1f6feb; border-color: #388bfd; color: white; }
+    .btn-primary:hover { background: #388bfd; }
+    .btn-success { background: #238636; border-color: #2ea043; color: white; }
+    .btn-success:hover { background: #2ea043; }
+    .btn-danger { background: #da3633; border-color: #f85149; color: white; }
+    .btn-danger:hover { background: #f85149; }
+
+    /* KPI Summary Row */
+    .kpi-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .kpi-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 12px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .kpi-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+    .kpi-val { font-size: 22px; font-weight: 700; }
+    .kpi-sub { font-size: 11px; color: var(--text-muted); }
+
+    /* Main Grid Layout */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 380px 1fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    @media (max-width: 1024px) {
+      .dashboard-grid { grid-template-columns: 1fr; }
+    }
+
+    /* Cards */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .card-header {
+      background: var(--bg-card-header);
+      border-bottom: 1px solid var(--border-color);
+      padding: 10px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 700;
+      font-size: 13px;
+    }
+    .card-body {
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* Form Inputs */
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .form-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+    .form-control {
+      background: #0d1117;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      color: var(--text-main);
+      padding: 6px 10px;
+      font-size: 12px;
+      width: 100%;
+    }
+    .form-control:focus {
+      outline: none;
+      border-color: var(--accent-blue);
+      box-shadow: 0 0 0 2px rgba(88, 166, 255, 0.2);
+    }
+    textarea.form-control { resize: vertical; min-height: 60px; }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    /* Tabs & Filters */
+    .tabs-bar {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      border-bottom: 1px solid var(--border-color);
+      margin-bottom: 10px;
+    }
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 6px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .tab-btn:hover { background: #21262d; color: var(--text-main); }
+    .tab-btn.active { background: #1f6feb; color: white; }
+
+    .status-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .status-open { background: rgba(248, 81, 73, 0.2); color: #ff7b72; border: 1px solid #da3633; }
+    .status-inprogress { background: rgba(210, 153, 34, 0.2); color: #d29922; border: 1px solid #9e6a03; }
+    .status-resolved { background: rgba(63, 185, 80, 0.2); color: #7ee787; border: 1px solid #238636; }
+    .status-closed { background: rgba(139, 148, 158, 0.2); color: #8b949e; border: 1px solid #484f58; }
+    .status-regression { background: rgba(163, 113, 247, 0.2); color: #d2a8ff; border: 1px solid #8957e5; }
+
+    /* Bugs Table */
+    .table-container {
+      overflow-x: auto;
+      max-height: 480px;
+      overflow-y: auto;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      text-align: left;
+    }
+    th {
+      background: var(--bg-card-header);
+      color: var(--text-muted);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 8px 10px;
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      border-bottom: 1px solid var(--border-color);
+    }
+    td {
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--border-color);
+      vertical-align: middle;
+    }
+    tr:hover td { background: rgba(128, 128, 128, 0.05); }
+
+    /* Trend Chart Container */
+    .chart-container {
+      background: #0d1117;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 12px;
+      min-height: 220px;
+      position: relative;
+    }
+    svg.trend-svg {
+      width: 100%;
+      height: 200px;
+      overflow: visible;
+    }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.85);
+      z-index: 9999;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      width: 90%;
+      max-width: 500px;
+      overflow: hidden;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.9);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Header Navigation -->
+  <header>
+    <div class="brand-title">
+      <span>🛡️ CLEBUGGER</span>
+      <span class="brand-subtitle">Standalone Multi-Project Bug &amp; Regression Tracker (SQLite3 Local Storage)</span>
+    </div>
+    <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+      <button class="btn btn-primary" onclick="openNewProjectModal()">➕ Add Project</button>
+      <button class="btn" onclick="rescanAllKLOC()" title="Re-scan code lines from disk">🔄 Scan KLOC</button>
+      <button class="btn" onclick="exportDataJSON()" title="Export database to JSON file">💾 Export JSON</button>
+      <button class="btn" onclick="openImportModal()" title="Import database backup">📥 Import</button>
+    </div>
+  </header>
+
+  <!-- KPI Metrics Banner -->
+  <div class="kpi-row">
+    <div class="kpi-card">
+      <span class="kpi-label">Active Projects</span>
+      <span class="kpi-val" id="kpiProjects">--</span>
+      <span class="kpi-sub">Tracked in SQLite3</span>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-label">Total Working KLOC</span>
+      <span class="kpi-val" style="color: var(--accent-green);" id="kpiWorkingKloc">--</span>
+      <span class="kpi-sub" id="kpiTotalKloc">-- total scanned</span>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-label">Bug-Impacted KLOC</span>
+      <span class="kpi-val" style="color: var(--accent-red);" id="kpiBugKloc">--</span>
+      <span class="kpi-sub" id="kpiBugPercent">-- of codebase</span>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-label">Active Bugs / Regressions</span>
+      <span class="kpi-val" style="color: var(--accent-yellow);" id="kpiOpenBugs">--</span>
+      <span class="kpi-sub" id="kpiResolvedBugs">-- resolved</span>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-label">Defect Density</span>
+      <span class="kpi-val" style="color: var(--accent-blue);" id="kpiDefectDensity">--</span>
+      <span class="kpi-sub">Bugs / 1,000 LOC</span>
+    </div>
+  </div>
+
+  <!-- Main Grid: Card 1 (Input) & Card 2 (Review by Project) -->
+  <div class="dashboard-grid">
+
+    <!-- CARD 1: Bug & Regression Input Card -->
+    <div class="card" id="cardInput">
+      <div class="card-header">
+        <span id="inputCardTitle">📝 Card 1: Log New Defect / Regression</span>
+        <button class="btn" style="padding: 2px 6px; font-size: 10px;" onclick="resetBugForm()">Clear</button>
+      </div>
+      <div class="card-body">
+        <form id="bugForm" onsubmit="handleBugSubmit(event)">
+          <input type="hidden" id="bugEditId" value="">
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Project Name *</label>
+              <select id="bugProject" class="form-control" required onchange="onProjectSelectChanged()">
+                <!-- Populated dynamically -->
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Build / Commit *</label>
+              <input type="text" id="bugBuild" class="form-control" placeholder="e.g. v2.4.2" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Defect Title / Summary *</label>
+            <input type="text" id="bugTitle" class="form-control" placeholder="Short description of the bug or regression" required>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Status</label>
+              <select id="bugStatus" class="form-control">
+                <option value="OPEN">🔴 OPEN</option>
+                <option value="IN_PROGRESS">🟡 IN_PROGRESS</option>
+                <option value="RESOLVED">🟢 RESOLVED</option>
+                <option value="CLOSED">⚪ CLOSED</option>
+                <option value="REGRESSION">🟣 REGRESSION</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Subsystem / Component</label>
+              <input type="text" id="bugComponent" class="form-control" placeholder="e.g. Slicer, UI, Modal">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Affected Files</label>
+              <input type="text" id="bugFiles" class="form-control" placeholder="e.g. core/server.py:820">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Estimated Defect LOC</label>
+              <input type="number" id="bugLoc" class="form-control" value="0" min="0" placeholder="Lines touched">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Resolution Details (Root Cause &amp; Fix)</label>
+            <textarea id="bugResolution" class="form-control" placeholder="How was this defect resolved? Root cause, changes made, tests added."></textarea>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Comments &amp; Reproduction Notes</label>
+            <textarea id="bugComments" class="form-control" placeholder="Steps to reproduce, user reports, or ongoing progress notes."></textarea>
+          </div>
+
+          <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 6px;">
+            <button type="button" class="btn" onclick="resetBugForm()">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="saveBugBtn">Save Bug to DB</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- CARD 2: Review Bug Status by Project -->
+    <div class="card" id="cardReview">
+      <div class="card-header">
+        <span>📋 Card 2: Review Bug Status by Project</span>
+        <div style="display: flex; gap: 6px; align-items: center;">
+          <input type="text" id="searchInput" class="form-control" placeholder="Search bugs..." style="width: 180px; padding: 3px 8px; font-size: 11px;" oninput="onSearchInput()">
+        </div>
+      </div>
+      <div class="card-body">
+        <!-- Project Tabs -->
+        <div class="tabs-bar" id="projectTabs">
+          <!-- Populated dynamically -->
+        </div>
+
+        <!-- Status Filter Pills -->
+        <div style="display: flex; gap: 6px; align-items: center; margin-bottom: 8px; flex-wrap: wrap;">
+          <span style="font-size: 11px; color: var(--text-muted); font-weight: 600;">Status:</span>
+          <button class="btn status-pill active" onclick="setStatusFilter('ALL', this)" style="padding: 2px 8px; font-size: 11px;">All</button>
+          <button class="btn status-pill" onclick="setStatusFilter('OPEN', this)" style="padding: 2px 8px; font-size: 11px;">🔴 Open</button>
+          <button class="btn status-pill" onclick="setStatusFilter('IN_PROGRESS', this)" style="padding: 2px 8px; font-size: 11px;">🟡 In Progress</button>
+          <button class="btn status-pill" onclick="setStatusFilter('RESOLVED', this)" style="padding: 2px 8px; font-size: 11px;">🟢 Resolved</button>
+          <button class="btn status-pill" onclick="setStatusFilter('REGRESSION', this)" style="padding: 2px 8px; font-size: 11px;">🟣 Regression</button>
+        </div>
+
+        <!-- Table of Bugs -->
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 85px;">ID</th>
+                <th style="width: 80px;">Build</th>
+                <th>Title &amp; Notes</th>
+                <th style="width: 100px;">Component</th>
+                <th style="width: 70px;">LOC</th>
+                <th style="width: 110px;">Status</th>
+                <th style="width: 130px; text-align: right;">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="bugsTableBody">
+              <!-- Populated dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- CARD 3: Bug Status Report Across All Projects & Trending Working vs Bug KLOC -->
+  <div class="card" id="cardReport">
+    <div class="card-header">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span>📊 Card 3: Multi-Project Quality Report &amp; KLOC Trending (Working vs Bug KLOC)</span>
+      </div>
+      <div style="display: flex; gap: 8px; align-items: center;">
+        <span style="font-size: 11px; color: var(--text-muted);">🟢 Working KLOC &nbsp;|&nbsp; 🔴 Bug KLOC</span>
+      </div>
+    </div>
+    <div class="card-body">
+      <!-- Interactive SVG Trend Chart -->
+      <div class="chart-container" id="chartContainer">
+        <svg class="trend-svg" id="trendSvg" viewBox="0 0 1000 200" preserveAspectRatio="none">
+          <!-- Dynamically plotted by renderTrendChart() -->
+        </svg>
+      </div>
+
+      <!-- Cross-Project Summary Table -->
+      <div style="margin-top: 10px;">
+        <div style="font-size: 12px; font-weight: 700; color: var(--text-muted); margin-bottom: 6px;">PROJECT INVENTORY &amp; AUTO-SCANNED KLOC METRICS:</div>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Project Name</th>
+                <th>Root Path on Disk</th>
+                <th>Total KLOC</th>
+                <th>Working KLOC</th>
+                <th>Bug KLOC</th>
+                <th>Open Defects</th>
+                <th>Defect Density</th>
+                <th style="text-align: right;">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="projectTableBody">
+              <!-- Populated dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Add New Project -->
+  <div class="modal-overlay" id="projectModal">
+    <div class="modal-box">
+      <div class="card-header">
+        <span>➕ Add New Project</span>
+        <button class="btn" style="padding: 2px 6px; font-size: 10px;" onclick="closeNewProjectModal()">✕</button>
+      </div>
+      <div class="card-body">
+        <form onsubmit="handleProjectSubmit(event)">
+          <div class="form-group">
+            <label class="form-label">Project Name *</label>
+            <input type="text" id="newProjName" class="form-control" placeholder="e.g. MEAGCLE, MillMage, JumpStart" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Code Prefix (2-4 Letters) *</label>
+            <input type="text" id="newProjPrefix" class="form-control" placeholder="e.g. CLE, MM, JS" required style="text-transform: uppercase;">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Root Directory Path on Disk *</label>
+            <input type="text" id="newProjPath" class="form-control" placeholder="e.g. D:\MEAGCLE" required>
+            <span style="font-size: 10px; color: var(--text-muted);">CLEBUGGER will automatically scan this folder to count KLOC.</span>
+          </div>
+          <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 10px;">
+            <button type="button" class="btn" onclick="closeNewProjectModal()">Cancel</button>
+            <button type="submit" class="btn btn-primary">Add &amp; Scan Project</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Import Backup -->
+  <div class="modal-overlay" id="importModal">
+    <div class="modal-box">
+      <div class="card-header">
+        <span>📥 Import Database Backup</span>
+        <button class="btn" style="padding: 2px 6px; font-size: 10px;" onclick="closeImportModal()">✕</button>
+      </div>
+      <div class="card-body">
+        <p style="font-size: 12px; color: var(--text-muted);">Select a JSON backup exported from CLEBUGGER to restore into SQLite3 &amp; LocalStorage.</p>
+        <input type="file" id="importFileInput" accept=".json" class="form-control" style="margin: 10px 0;">
+        <div style="display: flex; gap: 8px; justify-content: flex-end;">
+          <button type="button" class="btn" onclick="closeImportModal()">Cancel</button>
+          <button type="button" class="btn btn-primary" onclick="executeImportJSON()">Restore Backup</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notification Toast -->
+  <div id="toast" style="position: fixed; bottom: 20px; right: 20px; background: #1f6feb; color: white; padding: 10px 18px; border-radius: 6px; font-weight: 600; font-size: 13px; display: none; box-shadow: 0 4px 16px rgba(0,0,0,0.6); z-index: 10000;"></div>
+
+  <script>
+    let activeProjectFilter = 'ALL';
+    let activeStatusFilter = 'ALL';
+    let cachedProjects = [];
+    let cachedBugs = [];
+    let cachedHistory = [];
+    let searchDebounce = null;
+
+    function showToast(msg, isSuccess = true) {
+      const t = document.getElementById('toast');
+      t.innerText = msg;
+      t.style.background = isSuccess ? '#238636' : '#da3633';
+      t.style.display = 'block';
+      setTimeout(() => { t.style.display = 'none'; }, 3500);
+    }
+
+    async function loadAllData() {
+      try {
+        const [projRes, bugRes, sumRes, trendRes] = await Promise.all([
+          fetch('/api/projects').then(r => r.json()),
+          fetch('/api/bugs').then(r => r.json()),
+          fetch('/api/summary').then(r => r.json()),
+          fetch('/api/kloc-trend').then(r => r.json())
+        ]);
+
+        if (projRes.status === 'ok') cachedProjects = projRes.projects || [];
+        if (bugRes.status === 'ok') cachedBugs = bugRes.bugs || [];
+        if (trendRes.status === 'ok') cachedHistory = trendRes.history || [];
+
+        // Mirror to browser localStorage for offline resilience
+        try {
+          localStorage.setItem('clebugger_projects', JSON.stringify(cachedProjects));
+          localStorage.setItem('clebugger_bugs', JSON.stringify(cachedBugs));
+          localStorage.setItem('clebugger_history', JSON.stringify(cachedHistory));
+        } catch(e) {}
+
+        renderKPIs(sumRes);
+        renderProjectOptions();
+        renderProjectTabs();
+        renderBugsTable();
+        renderProjectInventoryTable();
+        renderTrendChart();
+      } catch (err) {
+        console.warn("Server connection notice, loading from localStorage:", err);
+        loadFromLocalStorageFallback();
+      }
+    }
+
+    function loadFromLocalStorageFallback() {
+      try {
+        cachedProjects = JSON.parse(localStorage.getItem('clebugger_projects') || '[]');
+        cachedBugs = JSON.parse(localStorage.getItem('clebugger_bugs') || '[]');
+        cachedHistory = JSON.parse(localStorage.getItem('clebugger_history') || '[]');
+        renderProjectOptions();
+        renderProjectTabs();
+        renderBugsTable();
+        renderProjectInventoryTable();
+        renderTrendChart();
+        showToast("Loaded offline buffer from LocalStorage", false);
+      } catch(e) {}
+    }
+
+    function renderKPIs(sum) {
+      if (!sum || sum.status !== 'ok') return;
+      document.getElementById('kpiProjects').innerText = sum.total_projects;
+      document.getElementById('kpiWorkingKloc').innerText = sum.working_kloc + ' KLOC';
+      document.getElementById('kpiTotalKloc').innerText = sum.total_kloc + ' KLOC Total';
+      document.getElementById('kpiBugKloc').innerText = sum.bug_kloc + ' KLOC';
+      
+      const pct = sum.total_kloc > 0 ? ((sum.bug_kloc / sum.total_kloc) * 100).toFixed(2) : 0.0;
+      document.getElementById('kpiBugPercent').innerText = `${pct}% defective volume`;
+      
+      document.getElementById('kpiOpenBugs').innerText = sum.open_bugs;
+      document.getElementById('kpiResolvedBugs').innerText = `${sum.resolved_bugs} resolved (${sum.resolution_rate}%)`;
+      document.getElementById('kpiDefectDensity').innerText = sum.defect_density;
+    }
+
+    function renderProjectOptions() {
+      const sel = document.getElementById('bugProject');
+      if (!sel) return;
+      const currentVal = sel.value;
+      sel.innerHTML = cachedProjects.map(p => `<option value="${p.name}">${p.name} [${p.code_prefix}]</option>`).join('');
+      if (currentVal && cachedProjects.some(p => p.name === currentVal)) {
+        sel.value = currentVal;
+      }
+    }
+
+    function renderProjectTabs() {
+      const container = document.getElementById('projectTabs');
+      if (!container) return;
+      let html = `<button class="tab-btn ${activeProjectFilter === 'ALL' ? 'active' : ''}" onclick="setProjectFilter('ALL')">All Projects (${cachedBugs.length})</button>`;
+      
+      cachedProjects.forEach(p => {
+        const count = cachedBugs.filter(b => b.project_name === p.name).length;
+        html += `<button class="tab-btn ${activeProjectFilter === p.name ? 'active' : ''}" onclick="setProjectFilter('${p.name}')">${p.name} (${count})</button>`;
+      });
+      container.innerHTML = html;
+    }
+
+    function setProjectFilter(projName) {
+      activeProjectFilter = projName;
+      renderProjectTabs();
+      renderBugsTable();
+      renderTrendChart();
+    }
+
+    function setStatusFilter(status, btn) {
+      activeStatusFilter = status;
+      document.querySelectorAll('.status-pill').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+      renderBugsTable();
+    }
+
+    function onSearchInput() {
+      clearTimeout(searchDebounce);
+      searchDebounce = setTimeout(renderBugsTable, 200);
+    }
+
+    function renderBugsTable() {
+      const tbody = document.getElementById('bugsTableBody');
+      if (!tbody) return;
+
+      const searchTerm = (document.getElementById('searchInput')?.value || '').toLowerCase().trim();
+
+      const filtered = cachedBugs.filter(b => {
+        if (activeProjectFilter !== 'ALL' && b.project_name !== activeProjectFilter) return false;
+        if (activeStatusFilter !== 'ALL' && b.status !== activeStatusFilter) return false;
+        if (searchTerm) {
+          const matchTitle = (b.title || '').toLowerCase().includes(searchTerm);
+          const matchCode = (b.bug_code || '').toLowerCase().includes(searchTerm);
+          const matchBuild = (b.build_number || '').toLowerCase().includes(searchTerm);
+          const matchComp = (b.component || '').toLowerCase().includes(searchTerm);
+          if (!matchTitle && !matchCode && !matchBuild && !matchComp) return false;
+        }
+        return true;
+      });
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 24px;">No matching defects found. Zero defects active! 🎉</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = filtered.map(b => {
+        const statusClass = `status-${(b.status || 'open').toLowerCase().replace('_', '')}`;
+        return `
+          <tr>
+            <td><strong style="color: var(--accent-blue);">${b.bug_code}</strong></td>
+            <td><span style="font-family: monospace; font-size: 11px; background: #0d1117; padding: 2px 4px; border-radius: 4px;">${b.build_number}</span></td>
+            <td>
+              <div style="font-weight: 600; color: #f0f6fc;">${escapeHtml(b.title)}</div>
+              ${b.resolution ? `<div style="font-size: 11px; color: #7ee787; margin-top: 2px;">✔ Fix: ${escapeHtml(b.resolution)}</div>` : ''}
+              ${b.comments ? `<div style="font-size: 10px; color: var(--text-muted); margin-top: 2px;">💬 ${escapeHtml(b.comments)}</div>` : ''}
+            </td>
+            <td><span style="font-size: 11px; color: var(--text-muted);">${escapeHtml(b.component || '--')}</span></td>
+            <td><span style="font-size: 11px; font-weight: 600;">${b.bug_loc}</span></td>
+            <td><span class="status-badge ${statusClass}">${b.status}</span></td>
+            <td style="text-align: right;">
+              <button class="btn" onclick="advanceBugStatus(${b.id})" title="Advance Status (Open ➔ In Progress ➔ Resolved ➔ Regression)" style="padding: 2px 6px; font-size: 11px;">Status ➔</button>
+              <button class="btn" onclick="loadBugForEdit(${b.id})" title="Edit in Card 1" style="padding: 2px 6px; font-size: 11px;">✏️</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function renderProjectInventoryTable() {
+      const tbody = document.getElementById('projectTableBody');
+      if (!tbody) return;
+
+      tbody.innerHTML = cachedProjects.map(p => {
+        const pBugs = cachedBugs.filter(b => b.project_name === p.name);
+        const openBugs = pBugs.filter(b => ['OPEN', 'IN_PROGRESS', 'REGRESSION'].includes(b.status)).length;
+        
+        // Find latest snapshot
+        const pSnaps = cachedHistory.filter(h => h.project_name === p.name);
+        const latest = pSnaps.length > 0 ? pSnaps[pSnaps.length - 1] : null;
+
+        const totalKloc = latest ? latest.total_kloc : 0.0;
+        const workingKloc = latest ? latest.working_kloc : 0.0;
+        const bugKloc = latest ? latest.bug_kloc : 0.0;
+        const density = latest ? latest.defect_density : (totalKloc > 0 ? (openBugs / totalKloc).toFixed(2) : '0.00');
+
+        return `
+          <tr>
+            <td><strong style="color: var(--accent-blue);">${p.name}</strong> <span style="font-size: 10px; color: var(--text-muted);">[${p.code_prefix}]</span></td>
+            <td style="font-family: monospace; font-size: 11px; color: var(--text-muted);">${escapeHtml(p.root_path)}</td>
+            <td><strong>${totalKloc}</strong> KLOC</td>
+            <td style="color: var(--accent-green); font-weight: 700;">${workingKloc} KLOC</td>
+            <td style="color: var(--accent-red); font-weight: 700;">${bugKloc} KLOC</td>
+            <td><span class="status-badge ${openBugs > 0 ? 'status-open' : 'status-resolved'}">${openBugs} Active</span></td>
+            <td><strong>${density}</strong></td>
+            <td style="text-align: right;">
+              <button class="btn" onclick="rescanSingleProject('${p.name}')" style="padding: 2px 8px; font-size: 11px;">🔄 Scan</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    /* Card 3: Interactive SVG Trend Chart */
+    function renderTrendChart() {
+      const svg = document.getElementById('trendSvg');
+      if (!svg) return;
+
+      // Filter history by active project
+      const history = (activeProjectFilter === 'ALL')
+        ? cachedHistory
+        : cachedHistory.filter(h => h.project_name === activeProjectFilter);
+
+      if (history.length < 2) {
+        svg.innerHTML = `
+          <text x="500" y="100" text-anchor="middle" fill="#8b949e" font-size="13">
+            Awaiting 2+ KLOC builds to plot regression trend curves. Click "🔄 Scan KLOC" or add defects to generate points!
+          </text>
+        `;
+        return;
+      }
+
+      const w = 1000, h = 200, padX = 50, padY = 25;
+      const chartW = w - padX * 2;
+      const chartH = h - padY * 2;
+
+      const maxKloc = Math.max(...history.map(d => d.total_kloc), 1.0) * 1.15;
+      const maxBug = Math.max(...history.map(d => d.bug_kloc), 0.1) * 1.5;
+
+      const n = history.length;
+      const ptsWorking = [];
+      const ptsBug = [];
+
+      history.forEach((d, i) => {
+        const x = padX + (i / (n - 1)) * chartW;
+        const yWork = padY + chartH - (d.working_kloc / maxKloc) * chartH;
+        const yBug = padY + chartH - (d.bug_kloc / maxBug) * chartH;
+        ptsWorking.push({ x, y: yWork, data: d });
+        ptsBug.push({ x, y: yBug, data: d });
+      });
+
+      // SVG path strings
+      const pathWorking = ptsWorking.map((p, idx) => `${idx === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ');
+      const areaWorking = `${pathWorking} L ${ptsWorking[ptsWorking.length - 1].x.toFixed(1)} ${h - padY} L ${padX} ${h - padY} Z`;
+
+      const pathBug = ptsBug.map((p, idx) => `${idx === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ');
+
+      let svgHtml = `
+        <!-- Grid lines -->
+        <line x1="${padX}" y1="${padY}" x2="${w - padX}" y2="${padY}" stroke="#21262d" stroke-dasharray="4" />
+        <line x1="${padX}" y1="${padY + chartH/2}" x2="${w - padX}" y2="${padY + chartH/2}" stroke="#21262d" stroke-dasharray="4" />
+        <line x1="${padX}" y1="${h - padY}" x2="${w - padX}" y2="${h - padY}" stroke="#30363d" />
+
+        <!-- Working KLOC Area (Green Fill) -->
+        <path d="${areaWorking}" fill="rgba(63, 185, 80, 0.12)" />
+        <path d="${pathWorking}" fill="none" stroke="#3fb950" stroke-width="2.5" />
+
+        <!-- Bug KLOC Line (Red) -->
+        <path d="${pathBug}" fill="none" stroke="#f85149" stroke-width="2" stroke-dasharray="3,3" />
+      `;
+
+      // Draw point markers
+      ptsWorking.forEach((p, idx) => {
+        svgHtml += `
+          <circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="3.5" fill="#3fb950" />
+          <text x="${p.x.toFixed(1)}" y="${h - padY + 16}" text-anchor="middle" fill="#8b949e" font-size="10">${p.data.build_number}</text>
+        `;
+      });
+
+      ptsBug.forEach((p, idx) => {
+        svgHtml += `
+          <circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="3" fill="#f85149" />
+        `;
+      });
+
+      // Axis labels
+      svgHtml += `
+        <text x="${padX - 8}" y="${padY + 4}" text-anchor="end" fill="#3fb950" font-size="10" font-weight="bold">${maxKloc.toFixed(1)}k</text>
+        <text x="${padX - 8}" y="${h - padY}" text-anchor="end" fill="#8b949e" font-size="10">0k</text>
+        <text x="${w - padX + 8}" y="${padY + 4}" text-anchor="start" fill="#f85149" font-size="10" font-weight="bold">${maxBug.toFixed(2)}k bug</text>
+      `;
+
+      svg.innerHTML = svgHtml;
+    }
+
+    /* Bug Form Actions */
+    async function handleBugSubmit(e) {
+      e.preventDefault();
+      const editId = document.getElementById('bugEditId').value;
+      const payload = {
+        project_name: document.getElementById('bugProject').value,
+        build_number: document.getElementById('bugBuild').value.trim(),
+        title: document.getElementById('bugTitle').value.trim(),
+        status: document.getElementById('bugStatus').value,
+        component: document.getElementById('bugComponent').value.trim(),
+        affected_files: document.getElementById('bugFiles').value.trim(),
+        bug_loc: parseInt(document.getElementById('bugLoc').value || 0),
+        resolution: document.getElementById('bugResolution').value.trim(),
+        comments: document.getElementById('bugComments').value.trim()
+      };
+
+      try {
+        let res;
+        if (editId) {
+          payload.id = parseInt(editId);
+          res = await fetch('/api/bugs', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          }).then(r => r.json());
+        } else {
+          res = await fetch('/api/bugs', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          }).then(r => r.json());
+        }
+
+        if (res.status === 'ok') {
+          showToast(editId ? `Updated ${res.bug.bug_code}` : `Created ${res.bug.bug_code}`);
+          resetBugForm();
+          loadAllData();
+        } else {
+          alert('Error saving bug: ' + (res.message || 'Unknown error'));
+        }
+      } catch (err) {
+        alert('Network error saving bug: ' + err.message);
+      }
+    }
+
+    function loadBugForEdit(bugId) {
+      const b = cachedBugs.find(x => x.id === bugId);
+      if (!b) return;
+
+      document.getElementById('bugEditId').value = b.id;
+      document.getElementById('bugProject').value = b.project_name;
+      document.getElementById('bugBuild').value = b.build_number;
+      document.getElementById('bugTitle').value = b.title;
+      document.getElementById('bugStatus').value = b.status;
+      document.getElementById('bugComponent').value = b.component || '';
+      document.getElementById('bugFiles').value = b.affected_files || '';
+      document.getElementById('bugLoc').value = b.bug_loc || 0;
+      document.getElementById('bugResolution').value = b.resolution || '';
+      document.getElementById('bugComments').value = b.comments || '';
+
+      document.getElementById('inputCardTitle').innerText = `✏️ Editing ${b.bug_code}`;
+      document.getElementById('saveBugBtn').innerText = `Update ${b.bug_code}`;
+      document.getElementById('cardInput').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function resetBugForm() {
+      document.getElementById('bugEditId').value = '';
+      document.getElementById('bugForm').reset();
+      document.getElementById('inputCardTitle').innerText = '📝 Card 1: Log New Defect / Regression';
+      document.getElementById('saveBugBtn').innerText = 'Save Bug to DB';
+    }
+
+    async function advanceBugStatus(bugId) {
+      try {
+        const res = await fetch('/api/bugs/advance', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: bugId })
+        }).then(r => r.json());
+
+        if (res.status === 'ok') {
+          showToast(`Advanced ${res.bug.bug_code} to ${res.bug.status}`);
+          loadAllData();
+        }
+      } catch (err) {
+        alert('Error advancing status: ' + err.message);
+      }
+    }
+
+    /* Project Actions */
+    function openNewProjectModal() { document.getElementById('projectModal').style.display = 'flex'; }
+    function closeNewProjectModal() { document.getElementById('projectModal').style.display = 'none'; }
+
+    async function handleProjectSubmit(e) {
+      e.preventDefault();
+      const payload = {
+        name: document.getElementById('newProjName').value.trim(),
+        code_prefix: document.getElementById('newProjPrefix').value.trim().toUpperCase(),
+        root_path: document.getElementById('newProjPath').value.trim()
+      };
+
+      try {
+        const res = await fetch('/api/projects', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        }).then(r => r.json());
+
+        if (res.status === 'ok') {
+          showToast(`Added project ${res.project.name} & completed initial KLOC scan!`);
+          closeNewProjectModal();
+          loadAllData();
+        } else {
+          alert('Error adding project: ' + (res.message || 'Unknown error'));
+        }
+      } catch(err) {
+        alert('Network error: ' + err.message);
+      }
+    }
+
+    async function rescanAllKLOC() {
+      showToast('Scanning codebase KLOC across all projects...');
+      try {
+        const res = await fetch('/api/projects/scan', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({})
+        }).then(r => r.json());
+
+        if (res.status === 'ok') {
+          showToast('✔ Codebase KLOC scan complete!');
+          loadAllData();
+        }
+      } catch(err) {
+        alert('Scan error: ' + err.message);
+      }
+    }
+
+    async function rescanSingleProject(pname) {
+      showToast(`Scanning KLOC for ${pname}...`);
+      try {
+        const res = await fetch('/api/projects/scan', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ project: pname })
+        }).then(r => r.json());
+
+        if (res.status === 'ok') {
+          showToast(`✔ Scanned ${pname}!`);
+          loadAllData();
+        }
+      } catch(err) {
+        alert('Scan error: ' + err.message);
+      }
+    }
+
+    /* Export & Import */
+    async function exportDataJSON() {
+      try {
+        const res = await fetch('/api/export').then(r => r.json());
+        const blob = new Blob([JSON.stringify(res, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `clebugger_backup_${new Date().toISOString().slice(0,10)}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        showToast('✔ Backup JSON exported!');
+      } catch(err) {
+        alert('Export failed: ' + err.message);
+      }
+    }
+
+    function openImportModal() { document.getElementById('importModal').style.display = 'flex'; }
+    function closeImportModal() { document.getElementById('importModal').style.display = 'none'; }
+
+    async function executeImportJSON() {
+      const fileIn = document.getElementById('importFileInput');
+      if (!fileIn.files || !fileIn.files.length) {
+        alert('Please select a JSON backup file');
+        return;
+      }
+      const file = fileIn.files[0];
+      const reader = new FileReader();
+      reader.onload = async function(e) {
+        try {
+          const data = JSON.parse(e.target.result);
+          if (!data.projects || !data.bugs) {
+            alert('Invalid backup file format');
+            return;
+          }
+          // Restore projects
+          for (const p of data.projects) {
+            await fetch('/api/projects', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ name: p.name, code_prefix: p.code_prefix, root_path: p.root_path })
+            });
+          }
+          // Restore bugs
+          for (const b of data.bugs) {
+            await fetch('/api/bugs', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(b)
+            });
+          }
+          closeImportModal();
+          showToast('✔ Database restored successfully!');
+          loadAllData();
+        } catch(err) {
+          alert('Error parsing backup JSON: ' + err.message);
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    // Startup initialization
+    window.addEventListener('DOMContentLoaded', () => {
+      loadAllData();
+      // Auto-poll every 30s
+      setInterval(loadAllData, 30000);
+    });
+  </script>
+</body>
+</html>

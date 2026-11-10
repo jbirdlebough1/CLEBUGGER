@@ -1,0 +1,13 @@
+.pio/
+__pycache__/
+*.pyc
+*.pyo
+*.db
+*.sqlite
+*.bak*
+tmp*
+output/*.svg
+output/*.nc
+output/*.png
+*.wasm
+*.wasm.gz
