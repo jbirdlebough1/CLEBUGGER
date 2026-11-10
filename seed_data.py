@@ -19,7 +19,8 @@ def seed():
     db.init_db()
 
     # 1. Register MEAGCLE project
-    print("[*] Registering project MEAGCLE at D:\\MEAGCLE...")
+    meagcle_dir = Path(__file__).resolve().parent.parent / "MEAGCLE"
+    print(f"[*] Registering project MEAGCLE at {meagcle_dir}...")
     proj = db.upsert_project(
         name="MEAGCLE",
         code_prefix="CLE",
@@ -97,7 +98,7 @@ def seed():
         print(f"    [+] Seeded {new_b['bug_code']}: {new_b['title'][:55]}...")
 
     # 3. Perform live KLOC scan
-    print("[*] Running automated codebase KLOC scan on D:\\MEAGCLE...")
+    print(f"[*] Running automated codebase KLOC scan on {meagcle_dir}...")
     scan = kloc_scanner.scan_project_kloc(str((Path(__file__).resolve().parent.parent / "MEAGCLE")))
     total_loc = scan["total_loc"]
     total_kloc = scan["total_kloc"]

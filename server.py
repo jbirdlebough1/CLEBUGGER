@@ -16,6 +16,13 @@ APP_DIR = Path(__file__).resolve().parent
 if str(APP_DIR) not in sys.path:
     sys.path.insert(0, str(APP_DIR))
 
+if sys.stdout is None or sys.stderr is None:
+    _log = open(APP_DIR / 'server.log', 'a', encoding='utf-8', buffering=1)
+    if sys.stdout is None:
+        sys.stdout = _log
+    if sys.stderr is None:
+        sys.stderr = _log
+
 import db
 import kloc_scanner
 

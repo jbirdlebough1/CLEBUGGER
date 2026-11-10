@@ -11,3 +11,4 @@ output/*.nc
 output/*.png
 *.wasm
 *.wasm.gz
+server.log
