@@ -19,6 +19,7 @@ if str(APP_DIR) not in sys.path:
 
 import db
 import kloc_scanner
+import github_sync
 
 def cmd_list(args):
     bugs = db.list_bugs(project=args.project if args.project != "ALL" else None)
@@ -117,6 +118,13 @@ def cmd_kpi(args):
     print(f"  Defect Density:    {density} bugs/KLOC")
     print("========================================================\n")
 
+def cmd_sync_github(args):
+    target = args.project or "JRFK"
+    if target.upper() == "ALL":
+        github_sync.sync_all()
+    else:
+        github_sync.sync_project_issues(target)
+
 def main():
     parser = argparse.ArgumentParser(description="CLEBUGGER CLI")
     subparsers = parser.add_subparsers(dest="cmd")
@@ -147,6 +155,10 @@ def main():
     # kpi
     subparsers.add_parser("kpi")
 
+    # sync-github
+    p_gh = subparsers.add_parser("sync-github")
+    p_gh.add_argument("project", nargs="?", default="JRFK")
+
     args = parser.parse_args()
     if args.cmd == "list":
         cmd_list(args)
@@ -158,6 +170,8 @@ def main():
         cmd_scan(args)
     elif args.cmd == "kpi":
         cmd_kpi(args)
+    elif args.cmd == "sync-github":
+        cmd_sync_github(args)
     else:
         parser.print_help()
 
